@@ -211,6 +211,7 @@ async function load() {
     if (tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA") return;
     if (e.key === "ArrowLeft") go(-1);
     if (e.key === "ArrowRight") go(1);
+    if (e.key === "r" || e.key === "R") loadChapter(1);
   });
 
   const saved = Number(localStorage.getItem("dao-chapter") || "1");
