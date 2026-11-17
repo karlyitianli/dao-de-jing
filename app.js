@@ -45,10 +45,10 @@ function applyFont() {
 
 // Local-only Mitchell support.
 // If data/mitchell.json exists on the device running the site, its english
-// arrays replace the Legge english for matching chapter numbers, per chapter
+// arrays replace the McDonald english for matching chapter numbers, per chapter
 // as each chapter file is loaded. That file is gitignored, so it is never
 // pushed to GitHub. If the file is missing, which is the case on the public
-// site, Legge stays in place.
+// site, McDonald stays in place.
 async function loadMitchell() {
   if (state.mitchell !== null) return state.mitchell;
   state.mitchell = {};
@@ -147,9 +147,11 @@ function render() {
   const english = state.showEnglish
     ? `<section class="english">${chapter.english.map((para) => `<p>${para}</p>`).join("")}</section>` : "";
 
+  const title = chapter.title
+    ? `<h2 class="chapter-title">${chapter.title}</h2>` : "";
   el.innerHTML = `
     <p class="chapter-no">Chapter ${chapter.number}</p>
-    <h2 class="chapter-title">${chapter.title}</h2>
+    ${title}
     ${chinese}${pinyin}${english}`;
 
   $("progress").textContent = `Chapter ${chapter.number} of 81`;
@@ -166,7 +168,7 @@ function renderGrid() {
     button.type = "button";
     button.textContent = String(n);
     button.disabled = !chapterExists(n);
-    button.title = chapterTitle(n);
+    button.title = chapterTitle(n) || `Chapter ${n}`;
     if (n === state.current) button.setAttribute("aria-current", "true");
     button.addEventListener("click", () => { loadChapter(n); });
     grid.appendChild(button);
