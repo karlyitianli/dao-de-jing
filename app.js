@@ -221,6 +221,10 @@ async function load() {
   // keeps playing while you change chapters.
   const bowlAudio = $("bowl-audio");
   const bowlButton = $("bowl-toggle");
+  // Sound levels: both sounds play at half volume (0.5).
+  // The MP3 files are unchanged, this only turns playback down.
+  bowlAudio.volume = 0.5;
+  $("page-audio").volume = 0.5;
   function syncBowlButton() {
     const playing = bowlAudio && !bowlAudio.paused && !bowlAudio.ended;
     bowlButton.setAttribute("aria-pressed", String(playing));
