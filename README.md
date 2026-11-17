@@ -7,15 +7,18 @@ Live site: https://karls.design/dao-de-jing/
 ## What is in this first version
 
 - `index.html`, `styles.css`, `app.js`: the reader, no build step
-- `data/chapters.json`: chapters 1 to 3, in the format for all 81
+- `data/index.json`: all 81 chapter numbers and titles
+- `data/chapters/001.json` to `data/chapters/081.json`: one file per chapter, each with number, title, chinese lines, pinyin lines, and english paragraphs. The app fetches only the chapter being read, and preloads the next one.
 - Dark and light mode, saved in the browser, with the system setting as the default
 - Font switcher, default Inter. Fonts in the switcher: Inter, EB Garamond, Marcellus, Newsreader, IBM Plex Mono. They are in the `FONTS` array in `app.js`, each with an id, label, CSS family, Google Fonts URL, and letter spacing. Inter uses letter spacing -0.02em, which is -2 percent. The other fonts use 0.
 - Toggles to show or hide Chinese, pinyin, and English, saved in the browser
 
 ## Text sources
 
-- Chinese: Wang Bi received edition, converted to simplified Chinese
-- English in this version: James Legge, 1891, public domain. Checked against Standard Ebooks, Tao Te Ching by Laozi, translated by James Legge.
+- Chinese: Wang Bi received edition, converted to simplified Chinese. The text for all 81 chapters was taken from the Chinese original on laozi-taoteching.org, converted from traditional to simplified with OpenCC, and split into lines at 。 and ；. Its modern English translation on that site was not used. Chapters 1 to 3 changed slightly from the first version to match this single consistent source, for example chapter 2 now reads 长短相较 and 万物作焉而不辞.
+- Pinyin: generated per character with pypinyin, tone marks, one line per Chinese line.
+- English in this version: James Legge, 1891, public domain. Taken from Standard Ebooks, Tao Te Ching by Laozi, translated by James Legge, including its verse chapters. Chapter titles are Legge's titles.
+- Total Chinese text: 5,296 characters across 81 chapters.
 
 ## Stephen Mitchell note, please read before publishing that translation
 

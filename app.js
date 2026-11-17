@@ -1,4 +1,7 @@
 // Dao De Jing reader.
+// Chapters are split, one file per chapter: data/chapters/001.json to 081.json.
+// data/index.json lists all 81 numbers and titles. Only the chapter being
+// read is fetched, plus the next one preloaded in the background.
 // Fonts, in switcher order. Inter stays first and is the default.
 // letterSpacing is per font: Inter is -0.02em, which is -2 percent, the others are 0.
 const FONTS = [
@@ -10,8 +13,11 @@ const FONTS = [
 ];
 
 const state = {
-  chapters: [],
+  index: [],
+  cache: {},
+  chapter: null,
   current: 1,
+  mitchell: null,
   theme: localStorage.getItem("dao-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
   font: localStorage.getItem("dao-font") || "Inter",
   showChinese: localStorage.getItem("dao-show-chinese") !== "false",
@@ -39,30 +45,36 @@ function applyFont() {
 
 // Local-only Mitchell support.
 // If data/mitchell.json exists on the device running the site, its english
-// arrays replace the Legge english for matching chapter numbers.
-// That file is gitignored, so it is never pushed to GitHub. If the file is
-// missing, which is the case on the public site, Legge stays in place.
-async function applyLocalMitchell() {
+// arrays replace the Legge english for matching chapter numbers, per chapter
+// as each chapter file is loaded. That file is gitignored, so it is never
+// pushed to GitHub. If the file is missing, which is the case on the public
+// site, Legge stays in place.
+async function loadMitchell() {
+  if (state.mitchell !== null) return state.mitchell;
+  state.mitchell = {};
   try {
     const res = await fetch("data/mitchell.json");
-    if (!res.ok) return false;
+    if (!res.ok) return state.mitchell;
     const local = await res.json();
-    let replaced = 0;
     (local.chapters || []).forEach((entry) => {
-      const chapter = chapterByNumber(entry.number);
-      if (chapter && Array.isArray(entry.english) && entry.english.length) {
-        chapter.english = entry.english;
-        replaced++;
+      if (Array.isArray(entry.english) && entry.english.length) {
+        state.mitchell[entry.number] = entry.english;
       }
     });
-    if (replaced) {
+    if (Object.keys(state.mitchell).length) {
       const note = $("translation-note");
       if (note) note.textContent = "English in this local copy: Stephen Mitchell, local only, not published. Chinese text: Wang Bi received edition, simplified.";
     }
-    return replaced > 0;
   } catch (e) {
-    return false;
+    // No local Mitchell file, Legge stays.
   }
+  return state.mitchell;
+}
+
+function applyMitchellTo(chapter) {
+  const replacement = state.mitchell && state.mitchell[chapter.number];
+  if (replacement) chapter.english = replacement;
+  return chapter;
 }
 
 function initFonts() {
@@ -80,12 +92,48 @@ function initFonts() {
   });
 }
 
-function chapterByNumber(n) {
-  return state.chapters.find((c) => c.number === n);
+function chapterExists(n) {
+  return state.index.some((c) => c.number === n);
+}
+
+function chapterTitle(n) {
+  const entry = state.index.find((c) => c.number === n);
+  return entry ? entry.title : "";
+}
+
+async function loadChapter(n) {
+  if (!chapterExists(n)) return;
+  state.current = n;
+  localStorage.setItem("dao-chapter", String(n));
+  if (state.cache[n]) {
+    state.chapter = state.cache[n];
+    render();
+    return;
+  }
+  const el = $("chapter");
+  if (el && !state.chapter) el.innerHTML = "<p>Loading chapter…</p>";
+  try {
+    const res = await fetch(`data/chapters/${String(n).padStart(3, "0")}.json`);
+    const chapter = await res.json();
+    state.cache[n] = applyMitchellTo(chapter);
+    state.chapter = state.cache[n];
+  } catch (e) {
+    if (el) el.innerHTML = "<p>Chapter could not be loaded.</p>";
+    return;
+  }
+  render();
+  // Preload the next chapter in the background, so the next key press is instant.
+  const next = n + 1;
+  if (chapterExists(next) && !state.cache[next]) {
+    fetch(`data/chapters/${String(next).padStart(3, "0")}.json`)
+      .then((r) => r.json())
+      .then((chapter) => { state.cache[next] = applyMitchellTo(chapter); })
+      .catch(() => {});
+  }
 }
 
 function render() {
-  const chapter = chapterByNumber(state.current);
+  const chapter = state.chapter;
   const el = $("chapter");
   if (!chapter) {
     el.innerHTML = "<p>Chapter not loaded yet.</p>";
@@ -105,9 +153,8 @@ function render() {
     ${chinese}${pinyin}${english}`;
 
   $("progress").textContent = `Chapter ${chapter.number} of 81`;
-  $("prev").disabled = !chapterByNumber(state.current - 1);
-  $("next").disabled = !chapterByNumber(state.current + 1);
-  localStorage.setItem("dao-chapter", String(state.current));
+  $("prev").disabled = !chapterExists(state.current - 1);
+  $("next").disabled = !chapterExists(state.current + 1);
   renderGrid();
 }
 
@@ -118,16 +165,17 @@ function renderGrid() {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = String(n);
-    button.disabled = !chapterByNumber(n);
+    button.disabled = !chapterExists(n);
+    button.title = chapterTitle(n);
     if (n === state.current) button.setAttribute("aria-current", "true");
-    button.addEventListener("click", () => { state.current = n; render(); });
+    button.addEventListener("click", () => { loadChapter(n); });
     grid.appendChild(button);
   }
 }
 
 function go(delta) {
-  const next = chapterByNumber(state.current + delta);
-  if (next) { state.current = next.number; render(); }
+  const next = state.current + delta;
+  if (chapterExists(next)) loadChapter(next);
 }
 
 async function load() {
@@ -160,12 +208,11 @@ async function load() {
   });
 
   const saved = Number(localStorage.getItem("dao-chapter") || "1");
-  const res = await fetch("data/chapters.json");
+  const res = await fetch("data/index.json");
   const data = await res.json();
-  state.chapters = data.chapters || [];
-  await applyLocalMitchell();
-  if (chapterByNumber(saved)) state.current = saved;
-  render();
+  state.index = data.chapters || [];
+  await loadMitchell();
+  loadChapter(chapterExists(saved) ? saved : 1);
 }
 
 load();
