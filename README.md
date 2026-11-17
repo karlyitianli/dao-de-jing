@@ -36,7 +36,17 @@ Do not put Mitchell text in `data/chapters.json`, in a pull request, or in any o
 
 ## Run it locally
 
-Open `index.html` in a browser, or serve the folder with any static server, for example `python3 -m http.server` in this folder, then open http://localhost:8000
+Do not open `index.html` directly from Finder. The app loads its chapters with fetch(), which does not work from a file address, so the page would load blank.
+
+Instead, in Terminal, from this folder, run:
+
+```
+./serve.sh
+```
+
+Then open http://localhost:8000 in a browser. Stop the server with Ctrl+C.
+
+That is also how to view the local Mitchell version: if `data/mitchell.json` exists in that folder, the local server will serve it and the app will use it. The public site at karls.design will still show Legge, because that file is never pushed.
 
 ## GitHub Pages
 
