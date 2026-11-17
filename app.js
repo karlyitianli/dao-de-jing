@@ -174,14 +174,31 @@ function renderGrid() {
     button.disabled = !chapterExists(n);
     button.title = chapterTitle(n) || `Chapter ${n}`;
     if (n === state.current) button.setAttribute("aria-current", "true");
-    button.addEventListener("click", () => { loadChapter(n); });
+    button.addEventListener("click", () => {
+      if (n !== state.current) playPageFlip();
+      loadChapter(n);
+    });
     grid.appendChild(button);
   }
 }
 
+// Page flip sound: a short 0.55s clip, preloaded so it plays instantly.
+// Played on every user-initiated chapter change, never on first load.
+// Restarting from 0 each time means fast repeated presses replay it.
+function playPageFlip() {
+  const pageAudio = $("page-audio");
+  if (!pageAudio) return;
+  pageAudio.currentTime = 0;
+  const p = pageAudio.play();
+  if (p) p.catch(() => {});
+}
+
 function go(delta) {
   const next = state.current + delta;
-  if (chapterExists(next)) loadChapter(next);
+  if (chapterExists(next)) {
+    playPageFlip();
+    loadChapter(next);
+  }
 }
 
 async function load() {
@@ -236,7 +253,10 @@ async function load() {
     if (tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA") return;
     if (e.key === "ArrowLeft") go(-1);
     if (e.key === "ArrowRight") go(1);
-    if (e.key === "r" || e.key === "R") loadChapter(1);
+    if (e.key === "r" || e.key === "R") {
+      if (state.current !== 1) playPageFlip();
+      loadChapter(1);
+    }
   });
 
   const saved = Number(localStorage.getItem("dao-chapter") || "1");
