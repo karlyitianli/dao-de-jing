@@ -18,6 +18,7 @@ Live site: https://karls.design/dao-de-jing/
 - Chinese: Wang Bi received edition, converted to simplified Chinese. The text for all 81 chapters was taken from the Chinese original on laozi-taoteching.org, converted from traditional to simplified with OpenCC, and split into lines at 。 and ；. Its modern English translation on that site was not used. Chapters 1 to 3 changed slightly from the first version to match this single consistent source, for example chapter 2 now reads 长短相较 and 万物作焉而不辞.
 - Pinyin: generated per character with pypinyin, tone marks, one line per Chinese line.
 - English in this version: J.H. McDonald, 1996, a translation for the public domain. Taken from the PDF Karl linked: https://faculty.mnsu.edu/scottgr/wp-content/uploads/sites/34/2014/08/TaoTeChing.pdf . Its title page says "Tao Te Ching - Written by Lao-Tzu / A Translation for the PUBLIC DOMAIN / by j.h.mcdonald, 1996". McDonald numbers the chapters only, with no chapter titles, so the Legge titles used in the first version were removed. The PDF repeats chapters 21 and 22, page 7 first 6 blocks are exact duplicates of page 6 last 6 blocks, and those duplicates were skipped during extraction. Cross-checked against a plain-text mirror of the same translation for chapters 1, 40, and 81.
+- English line breaks: each English paragraph in `data/chapters/` carries the line breaks from the GitHub PDF Karl linked, https://github.com/mozoku24/Dao-De-Jing/blob/main/Tao%20Te%20Ching%20-%20trans.%20by%20J.H..%20McDonald.pdf , as "\n" inside the paragraph string, and `app.js` renders each one as a `<br>`. The words are the MNSU PDF's text, not the GitHub PDF's retyping, which has small typos like "loosing", "it's own trouble", and "an frozen stream". Paragraph breaks are the MNSU PDF's, because the GitHub PDF splits some paragraphs at page boundaries, for example chapter 20 "Ordinary people are bright;" alone at the bottom of a page.
 - Total Chinese text: 5,296 characters across 81 chapters.
 
 ## Stephen Mitchell note, please read before publishing that translation
@@ -31,7 +32,7 @@ So the Mitchell text is not included in this public repo. The public site uses M
 Karl chose the local-only option on Nov 16, 2026. That works like this:
 
 1. Copy `data/mitchell.example.json` to `data/mitchell.json` on your own device.
-2. Fill in the `english` array for each chapter, one paragraph per string, from your own copy.
+2. Fill in the `english` array for each chapter, one paragraph per string, from your own copy. A paragraph can contain "\n" line breaks, as the McDonald paragraphs do, and the app will render each one as a line break.
 3. Serve the folder locally, or run it on a device where that file exists. `app.js` will try to load `data/mitchell.json` first, and if it is there it replaces the McDonald English for matching chapters and updates the footer note to say Mitchell, local only.
 4. Do not commit `data/mitchell.json`. It is listed in `.gitignore`, so it can never be pushed to GitHub by accident. Check with `git status` before any commit, and the file should not appear there.
 

@@ -144,8 +144,12 @@ function render() {
     ? `<section class="chinese" lang="zh-Hans">${chapter.chinese.map((line) => `<p>${line}</p>`).join("")}</section>` : "";
   const pinyin = state.showPinyin
     ? `<section class="pinyin" lang="zh-Latn">${chapter.pinyin.map((line) => `<p>${line}</p>`).join("")}</section>` : "";
+  // English paragraphs carry the PDF's line breaks as "\n".
+  // Render each line break as a <br>, so the text looks like the PDF:
+  // short lines, with a blank gap between paragraphs.
+  // A local Mitchell paragraph without "\n" just renders as one block.
   const english = state.showEnglish
-    ? `<section class="english">${chapter.english.map((para) => `<p>${para}</p>`).join("")}</section>` : "";
+    ? `<section class="english">${chapter.english.map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`).join("")}</section>` : "";
 
   const title = chapter.title
     ? `<h2 class="chapter-title">${chapter.title}</h2>` : "";
