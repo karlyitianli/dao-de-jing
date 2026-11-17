@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dao De Jing</title>
+<meta name="description" content="A minimalist Dao De Jing reader: simplified Chinese with pinyin, and English.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="font-link" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Dao De Jing</h1>
+    <p class="sub">道德经 · Laozi · 81 chapters</p>
+  </div>
+  <div class="controls">
+    <label class="control">Font
+      <select id="font-select" aria-label="Font"></select>
+    </label>
+    <button id="theme-toggle" type="button" aria-label="Switch dark and light mode">Dark</button>
+  </div>
+</header>
+
+<main>
+  <section class="toggles" aria-label="Display options">
+    <label><input type="checkbox" id="show-chinese" checked> Chinese</label>
+    <label><input type="checkbox" id="show-pinyin" checked> Pinyin</label>
+    <label><input type="checkbox" id="show-english" checked> English</label>
+  </section>
+
+  <article id="chapter" aria-live="polite">
+    <p class="loading">Loading chapter…</p>
+  </article>
+
+  <nav class="pager" aria-label="Chapter navigation">
+    <button id="prev" type="button">← Previous</button>
+    <p id="progress">Chapter 1 of 81</p>
+    <button id="next" type="button">Next →</button>
+  </nav>
+
+  <details class="all-chapters">
+    <summary>All chapters</summary>
+    <div id="chapter-grid" class="grid"></div>
+    <p class="note">Chapters 1 to 3 are loaded in this first version. The rest use the same data format in <code>data/chapters.json</code>.</p>
+  </details>
+</main>
+
+<footer>
+  <p>Chinese text: Wang Bi received edition, simplified. English in this version: James Legge, 1891, public domain. See README for the Stephen Mitchell note.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
