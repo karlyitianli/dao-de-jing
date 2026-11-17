@@ -60,6 +60,20 @@ button, select {
 button:hover, select:hover { border-color: var(--accent); }
 button:disabled { opacity: 0.4; }
 
+/* Singing bowl button: the icon is an inline Phosphor bowl-steam SVG. */
+#bowl-toggle { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; }
+#bowl-toggle svg { width: 20px; height: 20px; }
+#bowl-toggle.playing { border-color: var(--accent); color: var(--accent); }
+#bowl-toggle.playing svg { animation: bowl-ring 1.6s ease-in-out infinite; transform-origin: 50% 20%; }
+@keyframes bowl-ring {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bowl-toggle.playing svg { animation: none; }
+}
+
 main { max-width: 680px; margin: 0 auto; padding: 0 20px 48px; }
 
 .toggles {

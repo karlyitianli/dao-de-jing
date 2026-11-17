@@ -196,6 +196,31 @@ async function load() {
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme();
   });
+
+  // Singing bowl: one button, play on first click, pause on the next.
+  // A plain <audio> element, no library. preload="none" in index.html
+  // means the 119KB file is only fetched on the first click.
+  // The audio element lives outside the chapter article, so the sound
+  // keeps playing while you change chapters.
+  const bowlAudio = $("bowl-audio");
+  const bowlButton = $("bowl-toggle");
+  function syncBowlButton() {
+    const playing = bowlAudio && !bowlAudio.paused && !bowlAudio.ended;
+    bowlButton.setAttribute("aria-pressed", String(playing));
+    bowlButton.setAttribute("aria-label", playing ? "Pause singing bowl" : "Play singing bowl");
+    bowlButton.classList.toggle("playing", playing);
+  }
+  bowlButton.addEventListener("click", () => {
+    if (bowlAudio.paused) {
+      const p = bowlAudio.play();
+      if (p) p.catch(() => {});
+    } else {
+      bowlAudio.pause();
+    }
+  });
+  bowlAudio.addEventListener("play", syncBowlButton);
+  bowlAudio.addEventListener("pause", syncBowlButton);
+  bowlAudio.addEventListener("ended", syncBowlButton);
   $("show-chinese").addEventListener("change", (e) => { state.showChinese = e.target.checked; localStorage.setItem("dao-show-chinese", String(state.showChinese)); render(); });
   $("show-pinyin").addEventListener("change", (e) => { state.showPinyin = e.target.checked; localStorage.setItem("dao-show-pinyin", String(state.showPinyin)); render(); });
   $("show-english").addEventListener("change", (e) => { state.showEnglish = e.target.checked; localStorage.setItem("dao-show-english", String(state.showEnglish)); render(); });
