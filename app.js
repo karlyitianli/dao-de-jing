@@ -148,6 +148,17 @@ async function load() {
   $("prev").addEventListener("click", () => go(-1));
   $("next").addEventListener("click", () => go(1));
 
+  // Keyboard hotkeys: left arrow goes to the previous chapter,
+  // right arrow goes to the next chapter.
+  // Ignored while the font select or a checkbox has focus,
+  // so arrow keys keep working normally in those controls.
+  document.addEventListener("keydown", (e) => {
+    const tag = (e.target && e.target.tagName) || "";
+    if (tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA") return;
+    if (e.key === "ArrowLeft") go(-1);
+    if (e.key === "ArrowRight") go(1);
+  });
+
   const saved = Number(localStorage.getItem("dao-chapter") || "1");
   const res = await fetch("data/chapters.json");
   const data = await res.json();
