@@ -2,14 +2,14 @@
 
 A minimalist reading app: simplified Chinese with pinyin, and English. One chapter at a time, with previous and next, a chapter grid, dark and light mode, and a font switcher.
 
-Live site, once Pages is on: https://karlyitianli.github.io/dao-de-jing/
+Live site: https://karls.design/dao-de-jing/
 
 ## What is in this first version
 
 - `index.html`, `styles.css`, `app.js`: the reader, no build step
 - `data/chapters.json`: chapters 1 to 3, in the format for all 81
 - Dark and light mode, saved in the browser, with the system setting as the default
-- Font switcher, default Inter. Add fonts in the `FONTS` array in `app.js` when Karl enumerates them. Each entry needs an id, label, CSS family, and Google Fonts URL.
+- Font switcher, default Inter. Fonts in the switcher: Inter, EB Garamond, Marcellus, Newsreader, IBM Plex Mono. They are in the `FONTS` array in `app.js`, each with an id, label, CSS family, Google Fonts URL, and letter spacing. Inter uses letter spacing -0.02em, which is -2 percent. The other fonts use 0.
 - Toggles to show or hide Chinese, pinyin, and English, saved in the browser
 
 ## Text sources
@@ -21,13 +21,18 @@ Live site, once Pages is on: https://karlyitianli.github.io/dao-de-jing/
 
 Stephen Mitchell, Tao Te Ching, 1988, HarperCollins: translation copyright 1988 by Stephen Mitchell, all rights reserved. The book says no part may be used or reproduced in any manner without written permission, except brief quotations in critical articles and reviews.
 
-So the Mitchell text is not included in this public repo. The data format is ready to swap it in, by replacing the `english` array for each chapter, but do that only if one of these applies:
+So the Mitchell text is not included in this public repo. The public site uses Legge.
 
-1. You have written permission from HarperCollins or Mitchell, or
-2. You keep the Mitchell version private, for personal use only, and do not publish it on GitHub Pages, or
-3. You choose to publish with Legge, or another public domain translation, instead.
+## Local-only Mitchell version
 
-If you want Mitchell as the reading text, tell me which of those three you want, and I will do the matching next step.
+Karl chose the local-only option on Nov 16, 2026. That works like this:
+
+1. Copy `data/mitchell.example.json` to `data/mitchell.json` on your own device.
+2. Fill in the `english` array for each chapter, one paragraph per string, from your own copy.
+3. Serve the folder locally, or run it on a device where that file exists. `app.js` will try to load `data/mitchell.json` first, and if it is there it replaces the Legge English for matching chapters and updates the footer note to say Mitchell, local only.
+4. Do not commit `data/mitchell.json`. It is listed in `.gitignore`, so it can never be pushed to GitHub by accident. Check with `git status` before any commit, and the file should not appear there.
+
+Do not put Mitchell text in `data/chapters.json`, in a pull request, or in any other file in this repo. Publishing it would need written permission from HarperCollins or Mitchell.
 
 ## Run it locally
 

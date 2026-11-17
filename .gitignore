@@ -1,0 +1,5 @@
+# Local-only files. Never commit these.
+# data/mitchell.json holds a personal copy of a copyrighted translation
+# for use on your own device only. It is loaded by app.js when present,
+# and ignored here so it can never be pushed to GitHub.
+data/mitchell.json
