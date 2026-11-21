@@ -146,20 +146,19 @@ function render() {
     return;
   }
 
-  // Pinyin sits above each Chinese character, built as inline-block
-  // syllable units instead of <ruby>: ruby failed twice in the live
-  // browser, with long syllables running together, because the
-  // annotation font falls back to a wider system sans when Marcellus
-  // is selected and ruby margins do not behave like normal margins.
-  // A unit is as wide as the wider of its character and its pinyin,
-  // so neighbouring syllables can never touch, whatever the font.
-  // The Pinyin toggle controls whether the units carry annotations.
+  // Pinyin sits above each Chinese character with <ruby> and <rt>,
+  // so the two stay together instead of living in separate blocks.
+  // The Pinyin toggle controls whether the <rt> annotations render.
   // Pairing is positional: one pinyin token per Chinese character.
   // A few lines carry extra punctuation tokens (for example ﹕, ﹑, or a
   // stray comma), so a punctuation character consumes a following
   // punctuation-only token instead of letting it attach to the next
-  // character, and trailing punctuation is stripped from each unit.
-  function sylLine(cline, pline) {
+  // character, and trailing punctuation is stripped from each <rt>.
+  // Ruby was kept over inline-block syllable units: the units briefly
+  // went live, but Karl checked his own screen and ruby reads fine
+  // there. The collisions in the cloud-browser screenshots were an
+  // artifact of that browser's font environment, not the site.
+  function rubyLine(cline, pline) {
     const tokens = pline.split(" ");
     let ti = 0;
     const clean = (tok) => tok.replace(/^[^\p{L}\p{M}]+/u, "").replace(/[^\p{L}\p{M}]+$/u, "");
@@ -168,10 +167,8 @@ function render() {
     for (const ch of cline) {
       if (/[\u4e00-\u9fff]/.test(ch)) {
         const tok = ti < tokens.length ? tokens[ti++] : "";
-        const py = clean(tok);
-        out += py
-          ? `<span class="syl"><span class="py">${py}</span><span class="ch">${ch}</span></span>`
-          : `<span class="syl"><span class="ch">${ch}</span></span>`;
+        const rt = clean(tok);
+        out += rt ? `<ruby>${ch}<rt>${rt}</rt></ruby>` : ch;
       } else {
         if (ti < tokens.length && isPunct(tokens[ti])) ti++;
         out += ch;
@@ -180,7 +177,7 @@ function render() {
     return out;
   }
   const chinese = state.showChinese
-    ? `<section class="lang-card chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? sylLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
+    ? `<section class="lang-card chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? rubyLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
   // English paragraphs carry the PDF's line breaks as "\n".
   // Render each line break as a <br>, so the text looks like the PDF:
   // short lines, with a blank gap between paragraphs.

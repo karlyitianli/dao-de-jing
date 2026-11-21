@@ -105,11 +105,16 @@ article { padding: 32px 0 8px; }
 .chapter-title { font-size: 24px; font-weight: 600; margin: 4px 0 24px; }
 
 /* Language cards: English and Chinese each sit in their own rounded
-   card, at every breakpoint, and no text wraps: each card sizes to
-   its longest line. The row holds both cards side by side; when they
-   are wider than the row it scrolls horizontally, with a gentle snap
-   that still lets a wide card stop mid-way so its long lines can be
-   read. A single card stretches to fill the row. */
+   card, at every breakpoint, and no text wraps. Each card has a
+   floor width measured from the book, English 600px, which covers
+   the longest English line, and Chinese 680px, which covers 90
+   percent of Chinese lines, and grows past its floor when a longer
+   line needs it, the longest Chinese line is 72 characters in
+   chapter 41. Together the two cards are about 1300px, wider than
+   the page, so the row scrolls horizontally by default even on a
+   wide screen, with a gentle snap that still lets a wide card stop
+   mid-way so its long lines can be read. A single card stays the
+   width of its own content instead of taking the floor. */
 .cards-row { position: relative; }
 .cards-scroller {
   display: flex;
@@ -132,19 +137,20 @@ article { padding: 32px 0 8px; }
   padding: 24px;
   white-space: nowrap;
 }
-.cards-row.single .lang-card { flex: 1 0 auto; width: auto; }
-.lang-card.chinese { font-size: 22px; line-height: 2.2; }
+.cards-row.single .lang-card { flex: 1 0 auto; width: auto; min-width: 0; }
+.lang-card.chinese { font-size: 22px; line-height: 2.2; min-width: 680px; }
 .lang-card.chinese p { margin: 0 0 12px; }
-/* Pinyin sits above each character as an inline-block syllable unit:
-   the annotation on top, the character below, the unit as wide as
-   the wider of the two, so neighbouring syllables can never touch.
-   Units carry 3px of padding each side, which is the visible gap
-   between syllables. The annotation is a small muted sans, set
-   explicitly instead of inherited, after ruby failed twice live. */
-.lang-card.chinese .syl { display: inline-block; text-align: center; padding: 0 3px; }
-.lang-card.chinese .py { display: block; font-family: "Inter", system-ui, sans-serif; font-size: 11px; line-height: 1.4; color: var(--muted); }
-.lang-card.chinese .ch { display: block; }
-.lang-card.english { font-size: 18px; }
+/* Pinyin sits above each character with <ruby> and <rt>. The
+   annotation is smaller and muted, like the old pinyin lines were.
+   It is set in a narrow sans at 11px with no letter spacing of its
+   own, and each ruby gets 4px of side margin, so long syllables
+   have room. Ruby was kept over inline-block units: Karl checked
+   his own screen and ruby reads fine there, the collisions in the
+   cloud-browser screenshots were an artifact of that browser's
+   font environment. */
+.lang-card.chinese ruby { ruby-align: center; margin: 0 4px; }
+.lang-card.chinese rt { font-family: "Inter", system-ui, sans-serif; font-size: 11px; letter-spacing: 0; color: var(--muted); }
+.lang-card.english { font-size: 18px; min-width: 600px; }
 .lang-card.english p { margin: 0 0 24px; }
 /* Soft edge gradients hint the row scrolls: the right fade shows
    while there is a card to the right, the left fade while there is
