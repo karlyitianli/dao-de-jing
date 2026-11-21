@@ -146,15 +146,20 @@ function render() {
     return;
   }
 
-  // Pinyin sits above each Chinese character with <ruby> and <rt>,
-  // so the two stay together instead of living in separate blocks.
-  // The Pinyin toggle controls whether the <rt> annotations render.
+  // Pinyin sits above each Chinese character, built as inline-block
+  // syllable units instead of <ruby>: ruby failed twice in the live
+  // browser, with long syllables running together, because the
+  // annotation font falls back to a wider system sans when Marcellus
+  // is selected and ruby margins do not behave like normal margins.
+  // A unit is as wide as the wider of its character and its pinyin,
+  // so neighbouring syllables can never touch, whatever the font.
+  // The Pinyin toggle controls whether the units carry annotations.
   // Pairing is positional: one pinyin token per Chinese character.
   // A few lines carry extra punctuation tokens (for example ﹕, ﹑, or a
   // stray comma), so a punctuation character consumes a following
   // punctuation-only token instead of letting it attach to the next
-  // character, and trailing punctuation is stripped from each <rt>.
-  function rubyLine(cline, pline) {
+  // character, and trailing punctuation is stripped from each unit.
+  function sylLine(cline, pline) {
     const tokens = pline.split(" ");
     let ti = 0;
     const clean = (tok) => tok.replace(/^[^\p{L}\p{M}]+/u, "").replace(/[^\p{L}\p{M}]+$/u, "");
@@ -163,8 +168,10 @@ function render() {
     for (const ch of cline) {
       if (/[\u4e00-\u9fff]/.test(ch)) {
         const tok = ti < tokens.length ? tokens[ti++] : "";
-        const rt = clean(tok);
-        out += rt ? `<ruby>${ch}<rt>${rt}</rt></ruby>` : ch;
+        const py = clean(tok);
+        out += py
+          ? `<span class="syl"><span class="py">${py}</span><span class="ch">${ch}</span></span>`
+          : `<span class="syl"><span class="ch">${ch}</span></span>`;
       } else {
         if (ti < tokens.length && isPunct(tokens[ti])) ti++;
         out += ch;
@@ -173,22 +180,22 @@ function render() {
     return out;
   }
   const chinese = state.showChinese
-    ? `<section class="lang-panel chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? rubyLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
+    ? `<section class="lang-card chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? sylLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
   // English paragraphs carry the PDF's line breaks as "\n".
   // Render each line break as a <br>, so the text looks like the PDF:
   // short lines, with a blank gap between paragraphs.
   // A local Mitchell paragraph without "\n" just renders as one block.
   const english = state.showEnglish
-    ? `<section class="lang-panel english" lang="en">${chapter.english.map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`).join("")}</section>` : "";
+    ? `<section class="lang-card english" lang="en">${chapter.english.map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`).join("")}</section>` : "";
 
-  // English and Chinese live side by side in one card: English on
-  // the left, Chinese on the right. On a wide screen both panels show
-  // at once; on a narrow screen the card becomes a swipeable
-  // carousel, the second panel clipped at the edge, with soft
-  // gradients hinting it is there to swipe to.
-  const card = english || chinese
-    ? `<div class="lang-card${english && chinese ? "" : " single"}">
-      <div class="lang-scroller">${english}${chinese}</div>
+  // English and Chinese each sit in their own rounded card, at every
+  // breakpoint, and no text wraps: each card sizes to its longest
+  // line. When both cards together are wider than the row, the row
+  // scrolls horizontally, with soft gradients hinting at the cards
+  // on either side.
+  const row = english || chinese
+    ? `<div class="cards-row${english && chinese ? "" : " single"}">
+      <div class="cards-scroller">${english}${chinese}</div>
       <div class="fade fade-left" aria-hidden="true"></div>
       <div class="fade fade-right" aria-hidden="true"></div>
     </div>` : "";
@@ -198,24 +205,24 @@ function render() {
   el.innerHTML = `
     <p class="chapter-no">Chapter ${chapter.number}</p>
     ${title}
-    ${card}`;
+    ${row}`;
 
   // Edge fades track the scroll position: the left fade hides at the
-  // start, the right fade hides at the end. Tapping a clipped panel
-  // swaps to it, for mouse users who cannot drag the carousel.
-  const scroller = el.querySelector(".lang-scroller");
+  // start, the right fade hides at the end. Tapping a partly visible
+  // card scrolls it into view, for mouse users who cannot drag the row.
+  const scroller = el.querySelector(".cards-scroller");
   if (scroller) {
-    const cardEl = scroller.closest(".lang-card");
+    const rowEl = scroller.closest(".cards-row");
     const syncFades = () => {
       const max = scroller.scrollWidth - scroller.clientWidth;
-      cardEl.classList.toggle("at-start", scroller.scrollLeft <= 4);
-      cardEl.classList.toggle("at-end", scroller.scrollLeft >= max - 4);
+      rowEl.classList.toggle("at-start", scroller.scrollLeft <= 4);
+      rowEl.classList.toggle("at-end", scroller.scrollLeft >= max - 4);
     };
     scroller.addEventListener("scroll", syncFades, { passive: true });
     syncFades();
-    scroller.querySelectorAll(".lang-panel").forEach((panel) => {
-      panel.addEventListener("click", () => {
-        if (panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    scroller.querySelectorAll(".lang-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        if (card.scrollIntoView) card.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
       });
     });
   }
