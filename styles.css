@@ -132,12 +132,15 @@ article { padding: 32px 0 8px; }
   scroll-snap-align: center;
   padding: 24px 12px;
 }
-.lang-panel.chinese { font-size: 22px; line-height: 2.2; }
+.lang-panel.chinese { font-size: 22px; line-height: 2.2; letter-spacing: 0.05em; }
 .lang-panel.chinese p { margin: 0 0 12px; }
 /* Pinyin sits above each character with <ruby> and <rt>. The
-   annotation is smaller and muted, like the old pinyin lines were. */
-.lang-panel.chinese ruby { ruby-align: center; }
-.lang-panel.chinese rt { font-size: 14px; color: var(--muted); }
+   annotation is smaller and muted, like the old pinyin lines were.
+   A syllable is wider than its character, so the annotation is set
+   a touch smaller and each ruby gets a little side margin, or
+   neighbouring syllables run together, like chángdào. */
+.lang-panel.chinese ruby { ruby-align: center; margin: 0 2px; }
+.lang-panel.chinese rt { font-size: 12px; color: var(--muted); }
 .lang-panel.english { font-size: 18px; }
 .lang-panel.english p { margin: 0 0 24px; }
 /* Soft edge gradients hint the card swaps: the right fade shows
