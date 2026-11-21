@@ -104,14 +104,65 @@ article { padding: 32px 0 8px; }
 .chapter-no { color: var(--muted); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
 .chapter-title { font-size: 24px; font-weight: 600; margin: 4px 0 24px; }
 
-.chinese { font-size: 22px; line-height: 2.2; margin: 0 0 20px; }
-.chinese p { margin: 0 0 12px; }
+/* Language card: English on the left, Chinese on the right, in one
+   rounded card. On a narrow screen the scroller is a swipeable
+   carousel with scroll snap: each panel is the full width of the
+   card's content box, and the card's 24px side padding leaves a
+   sliver of the next panel peeking in, clipped at the edge. On a
+   wide screen both panels show side by side, split by a divider,
+   with no scrolling. */
+.lang-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  overflow: hidden;
+  position: relative;
+}
+.lang-scroller {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0 24px;
+}
+.lang-scroller::-webkit-scrollbar { display: none; }
+.lang-panel {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  padding: 24px 12px;
+}
+.lang-panel.chinese { font-size: 22px; line-height: 2.2; }
+.lang-panel.chinese p { margin: 0 0 12px; }
 /* Pinyin sits above each character with <ruby> and <rt>. The
    annotation is smaller and muted, like the old pinyin lines were. */
-.chinese ruby { ruby-align: center; }
-.chinese rt { font-size: 14px; color: var(--muted); }
-.english { font-size: 18px; }
-.english p { margin: 0 0 24px; }
+.lang-panel.chinese ruby { ruby-align: center; }
+.lang-panel.chinese rt { font-size: 14px; color: var(--muted); }
+.lang-panel.english { font-size: 18px; }
+.lang-panel.english p { margin: 0 0 24px; }
+/* Soft edge gradients hint the card swaps: the right fade shows
+   while there is a panel to the right, the left fade while there
+   is one to the left. Hidden when a single panel is shown. */
+.fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+}
+.fade-left { left: 0; background: linear-gradient(to right, var(--card), transparent); }
+.fade-right { right: 0; background: linear-gradient(to left, var(--card), transparent); }
+.lang-card.at-start .fade-left { opacity: 0; }
+.lang-card.at-end .fade-right { opacity: 0; }
+.lang-card.single .fade { display: none; }
+@media (min-width: 700px) {
+  .lang-scroller { overflow-x: hidden; }
+  .lang-panel { flex-basis: 50%; scroll-snap-align: none; }
+  .lang-panel.chinese { border-left: 1px solid var(--line); }
+  .lang-card.single .lang-panel { flex-basis: 100%; }
+  .fade { display: none; }
+}
 
 .pager {
   display: flex;
@@ -174,7 +225,7 @@ footer { max-width: 680px; margin: 0 auto; padding: 0 20px 40px; color: var(--mu
 
 @media (max-width: 560px) {
   body { font-size: 17px; }
-  .chinese { font-size: 20px; }
+  .lang-panel.chinese { font-size: 20px; }
   .grid { grid-template-columns: repeat(6, 1fr); }
   /* The picker becomes a bottom drawer that slides up. */
   .picker { align-items: flex-end; padding: 0; }

@@ -173,20 +173,52 @@ function render() {
     return out;
   }
   const chinese = state.showChinese
-    ? `<section class="chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? rubyLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
+    ? `<section class="lang-panel chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? rubyLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
   // English paragraphs carry the PDF's line breaks as "\n".
   // Render each line break as a <br>, so the text looks like the PDF:
   // short lines, with a blank gap between paragraphs.
   // A local Mitchell paragraph without "\n" just renders as one block.
   const english = state.showEnglish
-    ? `<section class="english">${chapter.english.map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`).join("")}</section>` : "";
+    ? `<section class="lang-panel english" lang="en">${chapter.english.map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`).join("")}</section>` : "";
+
+  // English and Chinese live side by side in one card: English on
+  // the left, Chinese on the right. On a wide screen both panels show
+  // at once; on a narrow screen the card becomes a swipeable
+  // carousel, the second panel clipped at the edge, with soft
+  // gradients hinting it is there to swipe to.
+  const card = english || chinese
+    ? `<div class="lang-card${english && chinese ? "" : " single"}">
+      <div class="lang-scroller">${english}${chinese}</div>
+      <div class="fade fade-left" aria-hidden="true"></div>
+      <div class="fade fade-right" aria-hidden="true"></div>
+    </div>` : "";
 
   const title = chapter.title
     ? `<h2 class="chapter-title">${chapter.title}</h2>` : "";
   el.innerHTML = `
     <p class="chapter-no">Chapter ${chapter.number}</p>
     ${title}
-    ${chinese}${english}`;
+    ${card}`;
+
+  // Edge fades track the scroll position: the left fade hides at the
+  // start, the right fade hides at the end. Tapping a clipped panel
+  // swaps to it, for mouse users who cannot drag the carousel.
+  const scroller = el.querySelector(".lang-scroller");
+  if (scroller) {
+    const cardEl = scroller.closest(".lang-card");
+    const syncFades = () => {
+      const max = scroller.scrollWidth - scroller.clientWidth;
+      cardEl.classList.toggle("at-start", scroller.scrollLeft <= 4);
+      cardEl.classList.toggle("at-end", scroller.scrollLeft >= max - 4);
+    };
+    scroller.addEventListener("scroll", syncFades, { passive: true });
+    syncFades();
+    scroller.querySelectorAll(".lang-panel").forEach((panel) => {
+      panel.addEventListener("click", () => {
+        if (panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      });
+    });
+  }
 
   $("progress-text").textContent = `Chapter ${chapter.number} of 81`;
   $("prev").disabled = !chapterExists(state.current - 1);
