@@ -36,7 +36,7 @@ body {
   padding: 32px 20px 16px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -60,6 +60,10 @@ button, select {
 button:hover, select:hover { border-color: var(--accent); }
 button:disabled { opacity: 0.4; }
 
+/* The font select's native caret sits at the right edge, so it gets
+   extra right padding to breathe. */
+#font-select { padding-right: 36px; }
+
 /* Singing bowl button: the icon is an inline Phosphor bowl-steam SVG. */
 #bowl-toggle, #theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; }
 #bowl-toggle svg, #theme-toggle svg { width: 20px; height: 20px; }
@@ -80,7 +84,7 @@ button:disabled { opacity: 0.4; }
   #bowl-toggle.playing svg { animation: none; }
 }
 
-main { max-width: 680px; margin: 0 auto; padding: 0 20px 48px; }
+main { max-width: 680px; margin: 0 auto; padding: 0 20px; }
 
 .toggles {
   display: flex;
@@ -117,21 +121,15 @@ article { padding: 32px 0 8px; }
   padding: 24px 0;
   border-top: 1px solid var(--line);
 }
-/* Progress button: the chapter indicator opens the chapter picker.
-   It reads as quiet text with a caret, not as a pill like Prev/Next. */
+/* Progress button: styled exactly like the Previous and Next pills,
+   so it reads as clickable. Only the layout and caret are specific,
+   the pill itself comes from the shared button rule. */
 #progress {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  padding: 8px 12px;
-  color: var(--muted);
-  font-size: 15px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 999px;
 }
-#progress:hover { color: var(--ink); border-color: var(--line); }
 #progress .icon-caret { width: 14px; height: 14px; transition: transform 0.15s ease-out; }
 #progress[aria-expanded="true"] .icon-caret { transform: rotate(180deg); }
 
