@@ -106,15 +106,21 @@ article { padding: 32px 0 8px; }
 
 /* Language cards: English and Chinese each sit in their own rounded
    card, at every breakpoint, and no text wraps. Each card has a
-   floor width measured from the book, English 600px, which covers
-   the longest English line, and Chinese 680px, which covers 90
+   floor width measured from the book, English 480px, which covers
+   90 percent of English lines, and Chinese 680px, which covers 90
    percent of Chinese lines, and grows past its floor when a longer
-   line needs it, the longest Chinese line is 72 characters in
-   chapter 41. Together the two cards are about 1300px, wider than
-   the page, so the row scrolls horizontally by default even on a
-   wide screen, with a gentle snap that still lets a wide card stop
-   mid-way so its long lines can be read. A single card stays the
-   width of its own content instead of taking the floor. */
+   line needs it, the longest English line is 551px and the longest
+   Chinese line is 72 characters in chapter 41. The English floor
+   is deliberately below the longest English line: at 600px the
+   first card filled the row and the second card showed only a
+   blank 24px sliver, so the fade could not hint at any content.
+   At 480px the initial view shows the first few Chinese
+   characters and their pinyin. Together the two cards are about
+   1160px, wider than the page, so the row scrolls horizontally
+   by default even on a wide screen, with a gentle snap that
+   still lets a wide card stop mid-way so its long lines can be
+   read. A single card stays the width of its own content instead
+   of taking the floor. */
 .cards-row { position: relative; }
 .cards-scroller {
   display: flex;
@@ -150,7 +156,7 @@ article { padding: 32px 0 8px; }
    font environment. */
 .lang-card.chinese ruby { ruby-align: center; margin: 0 4px; }
 .lang-card.chinese rt { font-family: "Inter", system-ui, sans-serif; font-size: 11px; letter-spacing: 0; color: var(--muted); }
-.lang-card.english { font-size: 18px; min-width: 600px; }
+.lang-card.english { font-size: 18px; min-width: 480px; }
 .lang-card.english p { margin: 0 0 24px; }
 /* Soft edge gradients hint the row scrolls: the right fade shows
    while there is a card to the right, the left fade while there is
@@ -159,7 +165,7 @@ article { padding: 32px 0 8px; }
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 64px;
+  width: 32px;
   pointer-events: none;
   transition: opacity 0.2s ease-out;
 }
