@@ -29,7 +29,13 @@ const $ = (id) => document.getElementById(id);
 
 function applyTheme() {
   document.documentElement.setAttribute("data-theme", state.theme);
-  $("theme-toggle").textContent = state.theme === "dark" ? "Light" : "Dark";
+  // The button shows the icon of the mode it switches to: a moon in
+  // light mode, a sun in dark mode. CSS on [data-theme] picks which
+  // of the two inline SVGs is visible.
+  const themeButton = $("theme-toggle");
+  const label = state.theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  themeButton.setAttribute("aria-label", label);
+  themeButton.setAttribute("title", label);
   localStorage.setItem("dao-theme", state.theme);
 }
 
@@ -140,10 +146,34 @@ function render() {
     return;
   }
 
+  // Pinyin sits above each Chinese character with <ruby> and <rt>,
+  // so the two stay together instead of living in separate blocks.
+  // The Pinyin toggle controls whether the <rt> annotations render.
+  // Pairing is positional: one pinyin token per Chinese character.
+  // A few lines carry extra punctuation tokens (for example ﹕, ﹑, or a
+  // stray comma), so a punctuation character consumes a following
+  // punctuation-only token instead of letting it attach to the next
+  // character, and trailing punctuation is stripped from each <rt>.
+  function rubyLine(cline, pline) {
+    const tokens = pline.split(" ");
+    let ti = 0;
+    const clean = (tok) => tok.replace(/^[^\p{L}\p{M}]+/u, "").replace(/[^\p{L}\p{M}]+$/u, "");
+    const isPunct = (tok) => tok !== "" && /^[^\p{L}\p{M}]+$/u.test(tok);
+    let out = "";
+    for (const ch of cline) {
+      if (/[\u4e00-\u9fff]/.test(ch)) {
+        const tok = ti < tokens.length ? tokens[ti++] : "";
+        const rt = clean(tok);
+        out += rt ? `<ruby>${ch}<rt>${rt}</rt></ruby>` : ch;
+      } else {
+        if (ti < tokens.length && isPunct(tokens[ti])) ti++;
+        out += ch;
+      }
+    }
+    return out;
+  }
   const chinese = state.showChinese
-    ? `<section class="chinese" lang="zh-Hans">${chapter.chinese.map((line) => `<p>${line}</p>`).join("")}</section>` : "";
-  const pinyin = state.showPinyin
-    ? `<section class="pinyin" lang="zh-Latn">${chapter.pinyin.map((line) => `<p>${line}</p>`).join("")}</section>` : "";
+    ? `<section class="chinese" lang="zh-Hans">${chapter.chinese.map((line, i) => `<p>${state.showPinyin ? rubyLine(line, chapter.pinyin[i] || "") : line}</p>`).join("")}</section>` : "";
   // English paragraphs carry the PDF's line breaks as "\n".
   // Render each line break as a <br>, so the text looks like the PDF:
   // short lines, with a blank gap between paragraphs.
@@ -156,9 +186,9 @@ function render() {
   el.innerHTML = `
     <p class="chapter-no">Chapter ${chapter.number}</p>
     ${title}
-    ${chinese}${pinyin}${english}`;
+    ${chinese}${english}`;
 
-  $("progress").textContent = `Chapter ${chapter.number} of 81`;
+  $("progress-text").textContent = `Chapter ${chapter.number} of 81`;
   $("prev").disabled = !chapterExists(state.current - 1);
   $("next").disabled = !chapterExists(state.current + 1);
   renderGrid();
@@ -177,9 +207,39 @@ function renderGrid() {
     button.addEventListener("click", () => {
       if (n !== state.current) playPageFlip();
       loadChapter(n);
+      closePicker();
     });
     grid.appendChild(button);
   }
+}
+
+// Chapter picker: the progress button opens a modal on desktop and
+// a bottom drawer on mobile, both showing the same chapter grid.
+// The CSS switches the presentation by viewport; this code only
+// opens, closes, and keeps focus inside the dialog while it is open.
+let pickerReturnFocus = null;
+function pickerOpen() { return !$("chapter-picker").hidden; }
+function openPicker() {
+  pickerReturnFocus = document.activeElement;
+  $("chapter-picker").hidden = false;
+  $("progress").setAttribute("aria-expanded", "true");
+  document.body.classList.add("picker-open");
+  const current = $("chapter-picker").querySelector('[aria-current="true"]');
+  (current || $("picker-close")).focus();
+  if (current && current.scrollIntoView) current.scrollIntoView({ block: "nearest" });
+}
+function closePicker() {
+  const picker = $("chapter-picker");
+  if (picker.hidden) return;
+  picker.hidden = true;
+  $("progress").setAttribute("aria-expanded", "false");
+  document.body.classList.remove("picker-open");
+  // Focus goes back where it came from, or to the progress button
+  // when the picker was opened without keyboard focus, as with a
+  // mouse click that never focused the button.
+  const target = pickerReturnFocus && pickerReturnFocus !== document.body
+    ? pickerReturnFocus : $("progress");
+  if (target && target.focus) target.focus();
 }
 
 // Page flip sound: a short 0.55s clip, preloaded so it plays instantly.
@@ -247,6 +307,9 @@ async function load() {
   $("show-english").addEventListener("change", (e) => { state.showEnglish = e.target.checked; localStorage.setItem("dao-show-english", String(state.showEnglish)); render(); });
   $("prev").addEventListener("click", () => go(-1));
   $("next").addEventListener("click", () => go(1));
+  $("progress").addEventListener("click", openPicker);
+  $("picker-close").addEventListener("click", closePicker);
+  $("chapter-picker").querySelector(".picker-backdrop").addEventListener("click", closePicker);
 
   // Keyboard hotkeys: left arrow goes to the previous chapter,
   // right arrow goes to the next chapter.
@@ -255,6 +318,19 @@ async function load() {
   document.addEventListener("keydown", (e) => {
     const tag = (e.target && e.target.tagName) || "";
     if (tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA") return;
+    // While the picker is open, only Escape closes it and Tab stays
+    // inside it. Chapter hotkeys wait until it is closed.
+    if (pickerOpen()) {
+      if (e.key === "Escape") closePicker();
+      if (e.key === "Tab") {
+        const focusable = [...$("chapter-picker").querySelectorAll("button:not([disabled])")];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+      return;
+    }
     if (e.key === "ArrowLeft") go(-1);
     if (e.key === "ArrowRight") go(1);
     if (e.key === "r" || e.key === "R") {
